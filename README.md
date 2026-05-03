@@ -1,10 +1,25 @@
-Originally created by LeftHandedGlove. Huge thanks to him starting this project!
-
 <p align="center">
 <img src="https://github.com/LeftHandedGlove/WeaponSwingTimerAddon/blob/master/Images/wst_logo_shadow.png?raw=true" width="50%" height="50%" title="WST_Logo" class="center">
 </p>
 
 # WeaponSwingTimer
+
+## Project lineage and credits
+This addon is a personal modified version based on **WeaponSwingTimer SixxFix**, which itself is a modified continuation of the original **WeaponSwingTimer** addon.
+
+- Original WeaponSwingTimer: https://www.curseforge.com/wow/addons/weaponswingtimer
+- WeaponSwingTimer SixxFix: https://www.curseforge.com/wow/addons/weaponswingtimer-sixxfix/comments
+
+Full respect and thanks go to LeftHandedGlove for creating the original WeaponSwingTimer project, and to WatchYourSixx for the WeaponSwingTimer SixxFix version that this project is based on. This project is intended as a continuation and customization of their work, with clear credit preserved to avoid any confusion about the original authorship. I do not claim original authorship of WeaponSwingTimer or WeaponSwingTimer SixxFix; this version only documents the changes made on top of WeaponSwingTimer SixxFix.
+
+## Changes in this modified version
+Compared with WeaponSwingTimer SixxFix, this version adds and adjusts the following:
+
+- Added a network latency display feature for the hunter shot bar.
+- Modernized and polished the addon textures.
+- Fixed Chinese language support.
+- Added an "out of combat opacity" option for the player cast bar.
+
 WeaponSwingTimer is an addon for WoW Classic that tracks your's and your target's swing timers.
 
 If you're a hunter, it also tracks Auto Shot timing and castable shots cast time.
