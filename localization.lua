@@ -33,6 +33,12 @@ local L = addon_data.localization_table
 	L["Delete Active Profile"]="Delete Active Profile"
 	L["Delete active profile? This cannot be undone."]="Delete active profile? This cannot be undone."
 	L["Reset profile to defaults?"]="Reset profile to defaults?"
+	L["Appearance"]="Appearance"
+	L["Behavior"]="Behavior"
+	L["Active Profile"]="Active Profile"
+	L["Visibility"]="Visibility"
+	L["Layout"]="Layout"
+	L["Opacity"]="Opacity"
 
 	--Player
 	L["Player Swing Bar Settings"]="Player Swing Bar Settings"
@@ -244,6 +250,15 @@ if GetLocale() == "deDE" then
 	-- L["Kiss of the Spider"] = "Kuss der Spinne"
 	-- L["Curse of Tongues"] = "Fluch der Sprachen"
 
+end
+
+if GetLocale() == "zhTW" then
+	L["Appearance"]="外觀"
+	L["Behavior"]="行為"
+	L["Active Profile"]="目前設定檔"
+	L["Visibility"]="顯示"
+	L["Layout"]="版面"
+	L["Opacity"]="透明度"
 end
 
 if GetLocale() == "esES" or GetLocale() == "esMX" then
@@ -891,6 +906,12 @@ if GetLocale() == "ruRU" then
 end
 
 if GetLocale() == "zhCN" then
+	L["Appearance"]="外观"
+	L["Behavior"]="行为"
+	L["Active Profile"]="当前配置"
+	L["Visibility"]="显示"
+	L["Layout"]="布局"
+	L["Opacity"]="透明度"
 	--Core
 	L["Thank you for installing WeaponSwingTimer Version"] = "感谢您安装WeaponSwingTimer版本！"
 	L["by WatchYourSixx! Use |cFFFFC300/wst|r for more options."] = "作者：LeftHandedGlove，持续更新：WatchYourSixx，汉化：Cyanokaze。使用|cFFFFC300/wst|r获取更多选项。"

@@ -627,10 +627,18 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
     addon_data.target.config_frame = CreateFrame("Frame", addon_name .. "TargetConfigPanel", parent_panel)
     local panel = addon_data.target.config_frame
     local settings = character_target_settings
+    panel:SetSize(addon_data.config.theme.panel_width, 264)
     -- Title Text
     panel.title_text = addon_data.config.TextFactory(panel, L["Target Swing Bar Settings"], 20)
     panel.title_text:SetPoint("TOPLEFT", 10, -10)
-    panel.title_text:SetTextColor(1, 0.82, 0, 1)
+    panel.title_text:SetTextColor(unpack(addon_data.config.theme.title))
+
+    panel.visibility_section = addon_data.config.SectionFactory(panel, L["Visibility"], 150, 202)
+    panel.visibility_section:SetPoint("TOPLEFT", 0, -34)
+    panel.layout_section = addon_data.config.SectionFactory(panel, L["Layout"], 226, 226)
+    panel.layout_section:SetPoint("TOPLEFT", 162, -34)
+    panel.opacity_section = addon_data.config.SectionFactory(panel, L["Opacity"], 244, 202)
+    panel.opacity_section:SetPoint("TOPLEFT", 400, -34)
     
     -- Enabled Checkbox
     panel.enabled_checkbox = addon_data.config.CheckBoxFactory(
@@ -639,7 +647,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         L["Enable"],
         L["Enables the target's swing bars."],
         addon_data.target.EnabledCheckBoxOnClick)
-    panel.enabled_checkbox:SetPoint("TOPLEFT", 10, -40)
+    panel.enabled_checkbox:SetPoint("TOPLEFT", 10, -66)
     -- Show Off-Hand Checkbox
     panel.show_offhand_checkbox = addon_data.config.CheckBoxFactory(
         "TargetShowOffHandCheckBox",
@@ -647,7 +655,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         L["Show Off-Hand"],
         L["Enables the target's off-hand swing bar."],
         addon_data.target.ShowOffHandCheckBoxOnClick)
-    panel.show_offhand_checkbox:SetPoint("TOPLEFT", 10, -60)
+    panel.show_offhand_checkbox:SetPoint("TOPLEFT", 10, -88)
     -- Show Border Checkbox
     panel.show_border_checkbox = addon_data.config.CheckBoxFactory(
         "TargetShowBorderCheckBox",
@@ -655,7 +663,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         L["Show border"],
         L["Enables the target bar's border."],
         addon_data.target.ShowBorderCheckBoxOnClick)
-    panel.show_border_checkbox:SetPoint("TOPLEFT", 10, -80)
+    panel.show_border_checkbox:SetPoint("TOPLEFT", 10, -110)
     -- Fill/Empty Checkbox
     panel.fill_empty_checkbox = addon_data.config.CheckBoxFactory(
         "TargetFillEmptyCheckBox",
@@ -663,7 +671,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         L["Fill / Empty"],
         L["Determines if the bar is full or empty when a swing is ready."],
         addon_data.target.FillEmptyCheckBoxOnClick)
-    panel.fill_empty_checkbox:SetPoint("TOPLEFT", 10, -100)
+    panel.fill_empty_checkbox:SetPoint("TOPLEFT", 10, -132)
     -- Show Left Text Checkbox
     panel.show_left_text_checkbox = addon_data.config.CheckBoxFactory(
         "TargetShowLeftTextCheckBox",
@@ -671,7 +679,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         L["Show Left Text"],
         L["Enables the target's left side text."],
         addon_data.target.ShowLeftTextCheckBoxOnClick)
-    panel.show_left_text_checkbox:SetPoint("TOPLEFT", 10, -120)
+    panel.show_left_text_checkbox:SetPoint("TOPLEFT", 10, -154)
     -- Show Right Text Checkbox
     panel.show_right_text_checkbox = addon_data.config.CheckBoxFactory(
         "TargetShowRightTextCheckBox",
@@ -679,7 +687,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         L["Show Right Text"],
         L["Enables the target's right side text."],
         addon_data.target.ShowRightTextCheckBoxOnClick)
-    panel.show_right_text_checkbox:SetPoint("TOPLEFT", 10, -140)
+    panel.show_right_text_checkbox:SetPoint("TOPLEFT", 10, -176)
     
     -- Width EditBox
     panel.width_editbox = addon_data.config.EditBoxFactory(
@@ -689,7 +697,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.target.WidthEditBoxOnEnter)
-    panel.width_editbox:SetPoint("TOPLEFT", 240, -60, "BOTTOMRIGHT", 275, -85)
+    panel.width_editbox:SetPoint("TOPLEFT", 260, -78)
     -- Height EditBox
     panel.height_editbox = addon_data.config.EditBoxFactory(
         "TargetHeightEditBox",
@@ -698,16 +706,16 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.target.HeightEditBoxOnEnter)
-    panel.height_editbox:SetPoint("TOPLEFT", 320, -60, "BOTTOMRIGHT", 355, -85)
+    panel.height_editbox:SetPoint("TOPLEFT", 340, -78)
 	-- Font Size EditBox
 	panel.fontsize_editbox = addon_data.config.EditBoxFactory(
         "FontSizeEditBox",
         panel,
-        "Font Size",
+        L["Font Size"],
         75,
         25,
         addon_data.target.FontSizeEditBoxOnEnter)
-    panel.fontsize_editbox:SetPoint("TOPLEFT", 160, -60)
+    panel.fontsize_editbox:SetPoint("TOPLEFT", 180, -78)
     -- X Offset EditBox
     panel.x_offset_editbox = addon_data.config.EditBoxFactory(
         "TargetXOffsetEditBox",
@@ -716,7 +724,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.target.XOffsetEditBoxOnEnter)
-    panel.x_offset_editbox:SetPoint("TOPLEFT", 200, -110, "BOTTOMRIGHT", 275, -135)
+    panel.x_offset_editbox:SetPoint("TOPLEFT", 220, -128)
     -- Y Offset EditBox
     panel.y_offset_editbox = addon_data.config.EditBoxFactory(
         "TargetYOffsetEditBox",
@@ -725,7 +733,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.target.YOffsetEditBoxOnEnter)
-    panel.y_offset_editbox:SetPoint("TOPLEFT", 280, -110, "BOTTOMRIGHT", 355, -135)
+    panel.y_offset_editbox:SetPoint("TOPLEFT", 300, -128)
     
     -- Main-hand color picker
     panel.main_color_picker = addon_data.config.color_picker_factory(
@@ -734,7 +742,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         settings.main_r, settings.main_g, settings.main_b, settings.main_a,
         L["Main-hand Bar Color"],
         addon_data.target.MainColorPickerOnClick)
-    panel.main_color_picker:SetPoint('TOPLEFT', 205, -150)
+    panel.main_color_picker:SetPoint('TOPLEFT', 182, -174)
     -- Main-hand color text picker
     panel.main_text_color_picker = addon_data.config.color_picker_factory(
         'TargetMainTextColorPicker',
@@ -742,7 +750,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         settings.main_text_r, settings.main_text_g, settings.main_text_b, settings.main_text_a,
         L["Main-hand Bar Text Color"],
         addon_data.target.MainTextColorPickerOnClick)
-    panel.main_text_color_picker:SetPoint('TOPLEFT', 205, -170)
+    panel.main_text_color_picker:SetPoint('TOPLEFT', 182, -196)
     -- Off-hand color picker
     panel.off_color_picker = addon_data.config.color_picker_factory(
         'TargetOffColorPicker',
@@ -750,7 +758,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         settings.off_r, settings.off_g, settings.off_b, settings.off_a,
         L["Off-hand Bar Color"],
         addon_data.target.OffColorPickerOnClick)
-    panel.off_color_picker:SetPoint('TOPLEFT', 205, -200)
+    panel.off_color_picker:SetPoint('TOPLEFT', 182, -220)
     -- Off-hand color text picker
     panel.off_text_color_picker = addon_data.config.color_picker_factory(
         'TargetOffTextColorPicker',
@@ -758,7 +766,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         settings.off_text_r, settings.off_text_g, settings.off_text_b, settings.off_text_a,
         L["Off-hand Bar Text Color"],
         addon_data.target.OffTextColorPickerOnClick)
-    panel.off_text_color_picker:SetPoint('TOPLEFT', 205, -220)
+    panel.off_text_color_picker:SetPoint('TOPLEFT', 182, -242)
     
     -- In Combat Alpha Slider
     panel.in_combat_alpha_slider = addon_data.config.SliderFactory(
@@ -769,7 +777,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         1,
         0.05,
         addon_data.target.CombatAlphaOnValChange)
-    panel.in_combat_alpha_slider:SetPoint("TOPLEFT", 405, -60)
+    panel.in_combat_alpha_slider:SetPoint("TOPLEFT", 425, -78)
     -- Out Of Combat Alpha Slider
     panel.ooc_alpha_slider = addon_data.config.SliderFactory(
         "TargetOOCAlphaSlider",
@@ -779,7 +787,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         1,
         0.05,
         addon_data.target.OOCAlphaOnValChange)
-    panel.ooc_alpha_slider:SetPoint("TOPLEFT", 405, -110)
+    panel.ooc_alpha_slider:SetPoint("TOPLEFT", 425, -128)
     -- Backplane Alpha Slider
     panel.backplane_alpha_slider = addon_data.config.SliderFactory(
         "TargetBackplaneAlphaSlider",
@@ -789,7 +797,7 @@ addon_data.target.CreateConfigPanel = function(parent_panel)
         1,
         0.05,
         addon_data.target.BackplaneAlphaOnValChange)
-    panel.backplane_alpha_slider:SetPoint("TOPLEFT", 405, -160)
+    panel.backplane_alpha_slider:SetPoint("TOPLEFT", 425, -178)
     
     -- Return the final panel
     addon_data.target.UpdateConfigPanelValues()

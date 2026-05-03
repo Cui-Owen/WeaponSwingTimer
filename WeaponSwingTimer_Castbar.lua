@@ -605,11 +605,19 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
     addon_data.castbar.config_frame = CreateFrame("Frame", addon_name .. "CastbarConfigPanel", parent_panel)
     local panel = addon_data.castbar.config_frame
     local settings = character_castbar_settings
+    panel:SetSize(addon_data.config.theme.panel_width, 244)
     
     -- Title Text
     panel.title_text = addon_data.config.TextFactory(panel, L["Player Spell Bar Settings"], 20)
     panel.title_text:SetPoint("TOPLEFT", 10, -10)
-    panel.title_text:SetTextColor(1, 0.82, 0, 1)
+    panel.title_text:SetTextColor(unpack(addon_data.config.theme.title))
+
+    panel.visibility_section = addon_data.config.SectionFactory(panel, L["Visibility"], 150, 150)
+    panel.visibility_section:SetPoint("TOPLEFT", 0, -34)
+    panel.layout_section = addon_data.config.SectionFactory(panel, L["Layout"], 226, 150)
+    panel.layout_section:SetPoint("TOPLEFT", 162, -34)
+    panel.opacity_section = addon_data.config.SectionFactory(panel, L["Opacity"], 244, 202)
+    panel.opacity_section:SetPoint("TOPLEFT", 400, -34)
     
     -- Show Text Checkbox
     panel.show_casttext_checkbox = addon_data.config.CheckBoxFactory(
@@ -618,7 +626,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
 		L["Show Cast Text"],
         L["Enables the cast bar text."],
         addon_data.castbar.ShowCastTextCheckBoxOnClick)
-    panel.show_casttext_checkbox:SetPoint("TOPLEFT", 10, -35)
+    panel.show_casttext_checkbox:SetPoint("TOPLEFT", 10, -66)
 
         -- Show Multi Shot Cast Bar Checkbox
     panel.show_multishot_cast_bar_checkbox = addon_data.config.CheckBoxFactory(
@@ -627,7 +635,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         L["Multi-Shot cast bar"],
         L["Allows the cast bar to show Multi-Shot casts."],
         addon_data.castbar.ShowMultiShotCastBarCheckBoxOnClick)
-    panel.show_multishot_cast_bar_checkbox:SetPoint("TOPLEFT", 10, -55)
+    panel.show_multishot_cast_bar_checkbox:SetPoint("TOPLEFT", 10, -88)
     
     -- Show Aimed Shot Cast Bar Checkbox
     panel.show_aimedshot_cast_bar_checkbox = addon_data.config.CheckBoxFactory(
@@ -636,7 +644,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         L["Aimed Shot cast bar"],
         L["Allows the cast bar to show Aimed Shot casts."],
         addon_data.castbar.ShowAimedShotCastBarCheckBoxOnClick)
-    panel.show_aimedshot_cast_bar_checkbox:SetPoint("TOPLEFT", 10, -75)
+    panel.show_aimedshot_cast_bar_checkbox:SetPoint("TOPLEFT", 10, -110)
 
     -- Show Latency Bar Checkbox
     panel.show_latency_bar_checkbox = addon_data.config.CheckBoxFactory(
@@ -645,7 +653,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         L["Latency bar"],
         L["Shows a bar that represents latency on cast bar."],
         addon_data.castbar.ShowLatencyBarsCheckBoxOnClick)
-    panel.show_latency_bar_checkbox:SetPoint("TOPLEFT", 10, -95)
+    panel.show_latency_bar_checkbox:SetPoint("TOPLEFT", 10, -132)
 
     -- Font Size EditBox
 	panel.fontsize_editbox = addon_data.config.EditBoxFactory(
@@ -655,7 +663,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.castbar.FontSizeEditBoxOnEnter)
-    panel.fontsize_editbox:SetPoint("TOPLEFT", 180, -50)
+    panel.fontsize_editbox:SetPoint("TOPLEFT", 180, -78)
 
     -- Width EditBox
     panel.width_editbox = addon_data.config.EditBoxFactory(
@@ -665,7 +673,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.castbar.WidthEditBoxOnEnter)
-    panel.width_editbox:SetPoint("TOPLEFT", 260, -50, "BOTTOMRIGHT", 275, -60)
+    panel.width_editbox:SetPoint("TOPLEFT", 260, -78)
     -- Height EditBox
     panel.height_editbox = addon_data.config.EditBoxFactory(
         "CastBarHeightEditBox",
@@ -674,7 +682,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.castbar.HeightEditBoxOnEnter)
-	panel.height_editbox:SetPoint("TOPLEFT", 340, -50, "BOTTOMRIGHT", 225, -60)
+	panel.height_editbox:SetPoint("TOPLEFT", 340, -78)
 
     -- X Offset EditBox
     panel.x_offset_editbox = addon_data.config.EditBoxFactory(
@@ -684,7 +692,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.castbar.XOffsetEditBoxOnEnter)
-    panel.x_offset_editbox:SetPoint("TOPLEFT", 220, -95, "BOTTOMRIGHT", 275, -105)
+    panel.x_offset_editbox:SetPoint("TOPLEFT", 220, -128)
     -- Y Offset EditBox
     panel.y_offset_editbox = addon_data.config.EditBoxFactory(
         "CastBarYOffsetEditBox",
@@ -693,7 +701,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         75,
         25,
         addon_data.castbar.YOffsetEditBoxOnEnter)
-    panel.y_offset_editbox:SetPoint("TOPLEFT", 300, -95, "BOTTOMRIGHT", 225, -105)
+    panel.y_offset_editbox:SetPoint("TOPLEFT", 300, -128)
          
     -- In Combat Alpha Slider
     panel.in_combat_alpha_slider = addon_data.config.SliderFactory(
@@ -704,7 +712,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         1,
         0.05,
         addon_data.castbar.CombatAlphaOnValChange)
-    panel.in_combat_alpha_slider:SetPoint("TOPLEFT", 425, -50)
+    panel.in_combat_alpha_slider:SetPoint("TOPLEFT", 425, -78)
     -- Out Of Combat Alpha Slider
     panel.ooc_alpha_slider = addon_data.config.SliderFactory(
         "CastBarOOCAlphaSlider",
@@ -714,7 +722,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         1,
         0.05,
         addon_data.castbar.OOCAlphaOnValChange)
-    panel.ooc_alpha_slider:SetPoint("TOPLEFT", 425, -100)
+    panel.ooc_alpha_slider:SetPoint("TOPLEFT", 425, -128)
     -- Backplane Alpha Slider
     panel.backplane_alpha_slider = addon_data.config.SliderFactory(
         "CastBarBackplaneAlphaSlider",
@@ -724,7 +732,7 @@ addon_data.castbar.CreateConfigPanel = function(parent_panel)
         1,
         0.05,
         addon_data.castbar.BackplaneAlphaOnValChange)
-    panel.backplane_alpha_slider:SetPoint("TOPLEFT", 425, -150)
+    panel.backplane_alpha_slider:SetPoint("TOPLEFT", 425, -178)
     
     -- Return the final panel
     addon_data.castbar.UpdateConfigPanelValues()

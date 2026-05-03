@@ -19,6 +19,7 @@ Compared with WeaponSwingTimer SixxFix, this version adds and adjusts the follow
 - Modernized and polished the addon textures.
 - Fixed Chinese language support.
 - Added an "out of combat opacity" option for the player cast bar.
+- Redesigned the options UI into a modern single-page scrolling layout with clearer grouping, improved spacing, and localized section labels.
 
 WeaponSwingTimer is an addon for WoW Classic that tracks your's and your target's swing timers.
 

@@ -3,6 +3,72 @@ local L = addon_data.localization_table
 
 addon_data.config = {}
 
+addon_data.config.theme = {
+    panel_width = 660,
+    title = { 1.0, 0.86, 0.35, 1 },
+    subtitle = { 0.86, 0.88, 0.92, 1 },
+    text = { 0.98, 0.96, 0.90, 1 },
+    muted = { 0.66, 0.68, 0.74, 1 },
+    card = { 0.055, 0.065, 0.085, 0.88 },
+    card_border = { 0.28, 0.24, 0.16, 0.72 },
+    input = { 0.025, 0.030, 0.040, 0.92 },
+}
+
+addon_data.config.ApplyBackdrop = function(frame, bg, border)
+    if not frame.SetBackdrop then
+        return
+    end
+
+    frame:SetBackdrop({
+        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        tile = true,
+        tileSize = 16,
+        edgeSize = 12,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+    frame:SetBackdropColor(bg[1], bg[2], bg[3], bg[4])
+    frame:SetBackdropBorderColor(border[1], border[2], border[3], border[4])
+end
+
+addon_data.config.SectionFactory = function(parent, title, width, height)
+    local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    section:SetSize(width or 620, height or 120)
+    addon_data.config.ApplyBackdrop(section, addon_data.config.theme.card, addon_data.config.theme.card_border)
+
+    section.title = section:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    section.title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+    section.title:SetJustifyH("LEFT")
+    section.title:SetTextColor(unpack(addon_data.config.theme.title))
+    section.title:SetPoint("TOPLEFT", 14, -10)
+    section.title:SetText(title)
+
+    return section
+end
+
+addon_data.config.HeaderFactory = function(parent, title, subtitle)
+    local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    header:SetSize(addon_data.config.theme.panel_width, 64)
+    addon_data.config.ApplyBackdrop(header, { 0.035, 0.042, 0.055, 0.72 }, { 0.38, 0.32, 0.18, 0.55 })
+
+    header.title = header:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    header.title:SetFont(STANDARD_TEXT_FONT, 21, "OUTLINE")
+    header.title:SetJustifyH("LEFT")
+    header.title:SetTextColor(unpack(addon_data.config.theme.title))
+    header.title:SetPoint("TOPLEFT", 16, -12)
+    header.title:SetText(title)
+
+    if subtitle then
+        header.subtitle = header:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+        header.subtitle:SetJustifyH("LEFT")
+        header.subtitle:SetTextColor(unpack(addon_data.config.theme.subtitle))
+        header.subtitle:SetPoint("TOPLEFT", header.title, "BOTTOMLEFT", 0, -6)
+        header.subtitle:SetText(subtitle)
+    end
+
+    return header
+end
+
 addon_data.config.OnDefault = function()
     addon_data.core.RestoreAllDefaults()
     addon_data.config.UpdateConfigValues()
@@ -13,75 +79,92 @@ addon_data.config.InitializeVisuals = function()
     -- Add the parent panel
     addon_data.config.config_parent_panel = CreateFrame("Frame", "MyFrame", UIParent)
     local panel = addon_data.config.config_parent_panel
-    panel:SetSize(1, 1)
-    panel.global_panel = addon_data.config.CreateConfigPanel(panel)
-    panel.global_panel:SetPoint('TOPLEFT', 10, -10)
-    panel.global_panel:SetSize(1, 1)
+    panel:SetSize(720, 640)
 
-    panel.logo = panel:CreateTexture(nil, 'ARTWORK')	
+    panel.logo = panel:CreateTexture(nil, 'BACKGROUND')
     panel.logo:SetTexture('Interface/AddOns/WeaponSwingTimer/Images/LandingPage')	
-    panel.logo:SetSize(1024, 1024)	
-    panel.logo:SetPoint('TOPLEFT', 5, -10)
+    panel.logo:SetSize(620, 260)
+    panel.logo:SetPoint('TOPLEFT', 18, -18)
+    panel.logo:SetAlpha(0.08)
+
+    panel.scroll_frame = CreateFrame("ScrollFrame", addon_name .. "ConfigScrollFrame", panel, "UIPanelScrollFrameTemplate")
+    panel.scroll_frame:SetPoint("TOPLEFT", 12, -12)
+    panel.scroll_frame:SetPoint("BOTTOMRIGHT", -30, 12)
+
+    panel.scroll_child = CreateFrame("Frame", addon_name .. "ConfigScrollChild", panel.scroll_frame)
+    panel.scroll_child:SetSize(700, 2220)
+    panel.scroll_frame:SetScrollChild(panel.scroll_child)
+    panel.scroll_frame:EnableMouseWheel(true)
+    panel.scroll_frame:SetScript("OnMouseWheel", function(self, delta)
+        local current = self:GetVerticalScroll()
+        local max_scroll = self:GetVerticalScrollRange()
+        local next_scroll = current - (delta * 48)
+        if next_scroll < 0 then
+            next_scroll = 0
+        elseif next_scroll > max_scroll then
+            next_scroll = max_scroll
+        end
+        self:SetVerticalScroll(next_scroll)
+    end)
+
+    local content = panel.scroll_child
+    local next_y = -6
+
+    local function AddTitle(text, y)
+        local title = addon_data.config.TextFactory(content, text, 22)
+        title:SetPoint("TOPLEFT", 4, y)
+        title:SetTextColor(unpack(addon_data.config.theme.title))
+        return title
+    end
+
+    panel.global_panel = addon_data.config.CreateConfigPanel(content)
+    panel.global_panel:SetPoint("TOPLEFT", 0, next_y)
+    next_y = next_y - 304
+
+    panel.melee_title = AddTitle(L["Melee Settings"], next_y)
+    next_y = next_y - 34
+
+    panel.config_melee_panel = CreateFrame("Frame", addon_name .. "CombinedMeleePanel", content)
+    panel.config_melee_panel:SetSize(680, 554)
+    panel.config_melee_panel:SetPoint("TOPLEFT", 0, next_y)
+    panel.config_melee_panel.player_panel = addon_data.player.CreateConfigPanel(panel.config_melee_panel)
+    panel.config_melee_panel.player_panel:SetPoint("TOPLEFT", 0, 0)
+    panel.config_melee_panel.target_panel = addon_data.target.CreateConfigPanel(panel.config_melee_panel)
+    panel.config_melee_panel.target_panel:SetPoint("TOPLEFT", 0, -286)
+    next_y = next_y - 580
+
+    panel.ranged_title = AddTitle(L["Ranged Settings"], next_y)
+    next_y = next_y - 34
+
+    panel.config_hunter_panel = CreateFrame("Frame", addon_name .. "CombinedRangedPanel", content)
+    panel.config_hunter_panel:SetSize(700, 928)
+    panel.config_hunter_panel:SetPoint("TOPLEFT", 0, next_y)
+    panel.config_hunter_panel.hunter_panel = addon_data.hunter.CreateConfigPanel(panel.config_hunter_panel)
+    panel.config_hunter_panel.hunter_panel:SetPoint("TOPLEFT", 0, 0)
+    panel.config_hunter_panel.castbar_panel = addon_data.castbar.CreateConfigPanel(panel.config_hunter_panel)
+    panel.config_hunter_panel.castbar_panel:SetPoint("TOPLEFT", 0, -684)
+    next_y = next_y - 954
+
+    panel.config_profiles_panel = CreateFrame("Frame", addon_name .. "CombinedProfilesPanel", content)
+    panel.config_profiles_panel:SetSize(680, 240)
+    panel.config_profiles_panel:SetPoint("TOPLEFT", 0, next_y)
+    panel.config_profiles_panel.config_profiles_panel = addon_data.config.CreateProfilesPanel(panel.config_profiles_panel)
 
     panel.name = "WeaponSwingTimer"
     panel.default = addon_data.config.OnDefault
     local category = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
     category.ID = panel.name
     Settings.RegisterAddOnCategory(category)
-    
-    -- Add the melee panel
-    panel.config_melee_panel = CreateFrame("Frame", nil, panel)
-    panel.config_melee_panel:SetSize(1, 1)
-    panel.config_melee_panel.player_panel = addon_data.player.CreateConfigPanel(panel.config_melee_panel)
-    panel.config_melee_panel.player_panel:SetPoint('TOPLEFT', 0, 0)
-    panel.config_melee_panel.player_panel:SetSize(1, 1)
-    panel.config_melee_panel.target_panel = addon_data.target.CreateConfigPanel(panel.config_melee_panel)
-    panel.config_melee_panel.target_panel:SetPoint('TOPLEFT', 0, -275)
-    panel.config_melee_panel.target_panel:SetSize(1, 1)
-    panel.config_melee_panel.name = L["Melee Settings"]
-    panel.config_melee_panel.parent = panel.name
-    panel.config_melee_panel.default = addon_data.config.OnDefault
-    Settings.RegisterCanvasLayoutSubcategory(category, panel.config_melee_panel, panel.config_melee_panel.name)
-    
-    -- Add the hunter panel
-    panel.config_hunter_panel = CreateFrame("Frame", nil, panel)
-    panel.config_hunter_panel:SetSize(1, 1)
-    panel.config_hunter_panel.hunter_panel = addon_data.hunter.CreateConfigPanel(panel.config_hunter_panel)
-    local hunter_panel_height = 290
-    panel.config_hunter_panel.hunter_panel:SetHeight(hunter_panel_height)
-    panel.config_hunter_panel.hunter_panel:SetSize(1, 1)
-    panel.config_hunter_panel.hunter_panel:SetPoint('TOPLEFT', 0, 0)
-    
-    panel.config_hunter_panel.castbar_panel = addon_data.castbar.CreateConfigPanel(panel.config_hunter_panel)	
-    panel.config_hunter_panel.castbar_panel:SetHeight(250)
-    panel.config_hunter_panel.castbar_panel:SetSize(1, 1)
-    local castbar_panel_position = - 10 - hunter_panel_height
-    panel.config_hunter_panel.castbar_panel:SetPoint("TOPLEFT",0, castbar_panel_position)
-
-    local totalHeight = panel.config_hunter_panel.hunter_panel:GetHeight() + panel.config_hunter_panel.castbar_panel:GetHeight() + 30
-    panel.config_hunter_panel:SetHeight(totalHeight)
-
-    panel.config_hunter_panel.name = L["Ranged Settings"]
-    panel.config_hunter_panel.parent = panel.name
-    panel.config_hunter_panel.default = addon_data.config.OnDefault
-    Settings.RegisterCanvasLayoutSubcategory(category, panel.config_hunter_panel, panel.config_hunter_panel.name)
-
-    -- Add the profiles panel
-    panel.config_profiles_panel = CreateFrame("Frame", nil, panel)
-    panel.config_profiles_panel:SetSize(1, 1)
-    panel.config_profiles_panel.config_profiles_panel = addon_data.config.CreateProfilesPanel(panel.config_profiles_panel)
-    panel.config_profiles_panel.name = L["Profiles"]
-    panel.config_profiles_panel.parent = panel.name
-    panel.config_profiles_panel.default = addon_data.config.OnDefault
-    Settings.RegisterCanvasLayoutSubcategory(category, panel.config_profiles_panel, panel.config_profiles_panel.name)
 
 end
 
 addon_data.config.TextFactory = function(parent, text, size)
     local text_obj = parent:CreateFontString(nil, "ARTWORK")
-    text_obj:SetFont(STANDARD_TEXT_FONT, size)
+    local flags = size and size >= 18 and "OUTLINE" or nil
+    text_obj:SetFont(STANDARD_TEXT_FONT, size, flags)
     text_obj:SetJustifyV("MIDDLE")
-    text_obj:SetJustifyH("CENTER")
+    text_obj:SetJustifyH("LEFT")
+    text_obj:SetTextColor(unpack(addon_data.config.theme.text))
     text_obj:SetText(text)
     return text_obj
 end
@@ -91,18 +174,22 @@ addon_data.config.HelpTextFactory = function(parent, text, width)
     text_obj:SetJustifyV("TOP")
     text_obj:SetJustifyH("LEFT")
     text_obj:SetWidth(width or 300)
+    text_obj:SetTextColor(unpack(addon_data.config.theme.muted))
     text_obj:SetText(text)
     return text_obj
 end
 
 addon_data.config.CheckBoxFactory = function(g_name, parent, checkbtn_text, tooltip_text, on_click_func)
     local checkbox = CreateFrame("CheckButton", addon_name .. g_name, parent, "ChatConfigCheckButtonTemplate")
-    getglobal(checkbox:GetName() .. 'Text'):SetText(checkbtn_text)
+    local label = getglobal(checkbox:GetName() .. 'Text')
+    label:SetText(checkbtn_text)
+    label:SetTextColor(unpack(addon_data.config.theme.text))
+    label:SetFont(STANDARD_TEXT_FONT, 12)
     checkbox.tooltip = tooltip_text
     checkbox:SetScript("OnClick", function(self)
         on_click_func(self)
     end)
-    checkbox:SetScale(1.1)
+    checkbox:SetScale(1.0)
     return checkbox
 end
 
@@ -110,15 +197,8 @@ addon_data.config.EditBoxFactory = function(g_name, parent, title, w, h, enter_f
     local edit_box_obj = CreateFrame("EditBox", addon_name .. g_name, parent, "BackdropTemplate")
     edit_box_obj.title_text = addon_data.config.TextFactory(edit_box_obj, title, 12)
     edit_box_obj.title_text:SetPoint("TOP", 0, 12)
-    edit_box_obj:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true,
-        tileSize = 26,
-        edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4}
-    })
-    edit_box_obj:SetBackdropColor(0,0,0,1)
+    edit_box_obj.title_text:SetTextColor(unpack(addon_data.config.theme.subtitle))
+    addon_data.config.ApplyBackdrop(edit_box_obj, addon_data.config.theme.input, addon_data.config.theme.card_border)
     edit_box_obj:SetSize(w, h)
     edit_box_obj:SetMultiLine(false)
     edit_box_obj:SetAutoFocus(false)
@@ -126,6 +206,7 @@ addon_data.config.EditBoxFactory = function(g_name, parent, title, w, h, enter_f
     edit_box_obj:SetJustifyH("CENTER")
 	edit_box_obj:SetJustifyV("MIDDLE")
     edit_box_obj:SetFontObject(GameFontNormal)
+    edit_box_obj:SetTextColor(1, 1, 1, 1)
     edit_box_obj:SetScript("OnEnterPressed", function(self)
         enter_func(self)
         self:ClearFocus()
@@ -154,6 +235,7 @@ addon_data.config.SliderFactory = function(g_name, parent, title, min_val, max_v
     editbox:SetPoint("LEFT", slider, "RIGHT", 15, 0)
     editbox:SetText(slider:GetValue())
     editbox:SetAutoFocus(false)
+    editbox:SetTextColor(1, 1, 1, 1)
     slider:SetScript("OnValueChanged", function(self)
         editbox:SetText(tostring(addon_data.utils.SimpleRound(self:GetValue(), val_step)))
         func(self)
@@ -169,8 +251,11 @@ addon_data.config.SliderFactory = function(g_name, parent, title, min_val, max_v
     -- force slider text to be set, odd cases where they were missing
     local name = slider:GetName()
     _G[name .. "Text"]:SetText(title)
+    _G[name .. "Text"]:SetTextColor(unpack(addon_data.config.theme.subtitle))
     _G[name .. "Low"]:SetText(tostring(min_val))
     _G[name .. "High"]:SetText(tostring(max_val))
+    _G[name .. "Low"]:SetTextColor(unpack(addon_data.config.theme.muted))
+    _G[name .. "High"]:SetTextColor(unpack(addon_data.config.theme.muted))
 
     editbox:SetScript("OnTextChanged", function(self)
         local val = tonumber(self:GetText())
@@ -191,7 +276,7 @@ end
 
 addon_data.config.color_picker_factory = function(g_name, parent, r, g, b, a, text, on_click_func)
     local color_picker = CreateFrame('Button', addon_name .. g_name, parent)
-    color_picker:SetSize(15, 15)
+    color_picker:SetSize(18, 18)
     color_picker.normal = color_picker:CreateTexture(nil, 'BACKGROUND')
     color_picker.normal:SetColorTexture(1, 1, 1, 1)
     color_picker.normal:SetPoint('TOPLEFT', -1, 1)
@@ -202,8 +287,23 @@ addon_data.config.color_picker_factory = function(g_name, parent, r, g, b, a, te
     color_picker:SetNormalTexture(color_picker.foreground)
     color_picker:SetScript('OnClick', on_click_func)
     color_picker.text = addon_data.config.TextFactory(color_picker, text, 12)
-    color_picker.text:SetPoint('LEFT', 25, 0)
+    color_picker.text:SetPoint('LEFT', 28, 0)
+    color_picker.text:SetTextColor(unpack(addon_data.config.theme.text))
     return color_picker
+end
+
+addon_data.config.StyleButton = function(button, is_danger)
+    if not button then
+        return
+    end
+
+    button:SetNormalFontObject(GameFontNormal)
+    button:SetHighlightFontObject(GameFontHighlight)
+    if is_danger then
+        button:GetFontString():SetTextColor(1, 0.58, 0.48, 1)
+    else
+        button:GetFontString():SetTextColor(1, 0.86, 0.35, 1)
+    end
 end
 
 addon_data.config.ShowColorPicker = function(settings, name, foreground_texture, on_change)
@@ -281,6 +381,7 @@ end
 addon_data.config.CreateConfigPanel = function(parent_panel)
     addon_data.config.config_frame = CreateFrame("Frame", addon_name .. "GlobalConfigPanel", parent_panel)
     local panel = addon_data.config.config_frame
+    panel:SetSize(addon_data.config.theme.panel_width, 280)
 
     local function RefreshTexturePreview()
         if not panel.texture_preview_fill then
@@ -350,50 +451,48 @@ addon_data.config.CreateConfigPanel = function(parent_panel)
         end
     end
 
-    -- Title Text
-    panel.title_text = addon_data.config.TextFactory(panel, L["Global Bar Settings"], 20)
-    panel.title_text:SetPoint("TOPLEFT", 0, 0)
-    panel.title_text:SetTextColor(1, 0.9, 0, 1)
+    panel.header = addon_data.config.HeaderFactory(
+        panel,
+        L["Global Bar Settings"],
+        L["Global texture used by all swing, shot, and cast bars."])
+    panel.header:SetPoint("TOPLEFT", 0, 0)
+
+    panel.texture_section = addon_data.config.SectionFactory(panel, L["Appearance"], 640, 112)
+    panel.texture_section:SetPoint("TOPLEFT", 0, -76)
+
+    panel.behavior_section = addon_data.config.SectionFactory(panel, L["Behavior"], 640, 78)
+    panel.behavior_section:SetPoint("TOPLEFT", 0, -200)
 
     panel.texture_title = addon_data.config.TextFactory(panel, L["Bar Texture"], 16)
-    panel.texture_title:SetPoint("TOPLEFT", 0, -35)
-    panel.texture_title:SetTextColor(1, 0.82, 0, 1)
+    panel.texture_title:SetPoint("TOPLEFT", 16, -104)
+    panel.texture_title:SetTextColor(unpack(addon_data.config.theme.subtitle))
 
     panel.texture_dropdown = CreateFrame("Frame", addon_name .. "TextureDropDown", panel, "UIDropDownMenuTemplate")
-    panel.texture_dropdown:SetPoint("TOPLEFT", -15, -50)
+    panel.texture_dropdown:SetPoint("TOPLEFT", 0, -126)
     UIDropDownMenu_SetWidth(panel.texture_dropdown, 180)
     UIDropDownMenu_Initialize(panel.texture_dropdown, InitializeTextureDropDown)
 
     panel.texture_preview_title = addon_data.config.TextFactory(panel, L["Texture Preview"], 16)
-    panel.texture_preview_title:SetPoint("TOPLEFT", 240, -35)
-    panel.texture_preview_title:SetTextColor(1, 0.82, 0, 1)
+    panel.texture_preview_title:SetPoint("TOPLEFT", 280, -104)
+    panel.texture_preview_title:SetTextColor(unpack(addon_data.config.theme.subtitle))
 
     panel.texture_preview_frame = CreateFrame("Frame", addon_name .. "TexturePreviewFrame", panel, "BackdropTemplate")
     panel.texture_preview_frame:SetSize(180, 18)
-    panel.texture_preview_frame:SetPoint("TOPLEFT", 240, -56)
-    panel.texture_preview_frame:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true,
-        tileSize = 16,
-        edgeSize = 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-    })
-    panel.texture_preview_frame:SetBackdropColor(0, 0, 0, 0.9)
+    panel.texture_preview_frame:SetPoint("TOPLEFT", 280, -128)
+    addon_data.config.ApplyBackdrop(panel.texture_preview_frame, addon_data.config.theme.input, addon_data.config.theme.card_border)
 
     panel.texture_preview_fill = panel.texture_preview_frame:CreateTexture(nil, "ARTWORK")
     panel.texture_preview_fill:SetPoint("TOPLEFT", 3, -3)
     panel.texture_preview_fill:SetPoint("BOTTOMRIGHT", -3, 3)
 
     panel.texture_name_text = addon_data.config.HelpTextFactory(panel, "", 180)
-    panel.texture_name_text:SetPoint("TOPLEFT", 240, -80)
+    panel.texture_name_text:SetPoint("TOPLEFT", 280, -154)
 
     panel.texture_help = addon_data.config.HelpTextFactory(
         panel,
-        L["Global texture used by all swing, shot, and cast bars."]
-            .. "\n" .. L["Texture lists are split into pages to keep the menu compact."],
+        L["Texture lists are split into pages to keep the menu compact."],
         420)
-    panel.texture_help:SetPoint("TOPLEFT", 0, -95)
+    panel.texture_help:SetPoint("TOPLEFT", 16, -164)
     
     -- Is Locked Checkbox
     panel.is_locked_checkbox = addon_data.config.CheckBoxFactory(
@@ -402,7 +501,7 @@ addon_data.config.CreateConfigPanel = function(parent_panel)
         L[" Lock All Bars"],
         L["Locks all of the swing bar frames, preventing them from being dragged."],
         addon_data.config.IsLockedCheckBoxOnClick)
-    panel.is_locked_checkbox:SetPoint("TOPLEFT", 0, -145)
+    panel.is_locked_checkbox:SetPoint("TOPLEFT", 16, -232)
 
     panel.welcome_checkbox = addon_data.config.CheckBoxFactory(
         "WelcomeCheckBox",
@@ -410,7 +509,7 @@ addon_data.config.CreateConfigPanel = function(parent_panel)
         L[" Welcome Message"],
         L["Displays the welcome message upon login/reload. Uncheck to disable."],
         addon_data.config.WelcomeCheckBoxOnClick)
-    panel.welcome_checkbox:SetPoint("TOPLEFT", 0, -175)
+    panel.welcome_checkbox:SetPoint("TOPLEFT", 260, -232)
 
     panel.RefreshTextureControls = RefreshTexturePreview
     
@@ -421,19 +520,20 @@ end
 
 addon_data.config.CreateProfilesPanel = function(parent)
     local panel = parent
+    panel:SetSize(addon_data.config.theme.panel_width, 250)
 
-    panel.title = addon_data.config.TextFactory(panel, "Profiles", 20)
-    panel.title:SetPoint("TOPLEFT", 10, -10)
-    panel.title:SetTextColor(1, 0.82, 0, 1)
+    panel.header = addon_data.config.HeaderFactory(
+        panel,
+        L["Profiles"],
+        L["Profiles let you save multiple layouts and quickly switch between them."])
+    panel.header:SetPoint("TOPLEFT", 0, 0)
 
-    panel.desc = addon_data.config.TextFactory(panel,
-        L["Profiles let you save multiple layouts and quickly switch between them."], 12)
-    panel.desc:SetPoint("TOPLEFT", 10, -40)
-    panel.desc:SetTextColor(1, 1, 1, 1)
+    panel.profile_section = addon_data.config.SectionFactory(panel, L["Active Profile"], 640, 142)
+    panel.profile_section:SetPoint("TOPLEFT", 0, -78)
 
     -- Dropdown
     panel.profile_dropdown = CreateFrame("Frame", addon_name .. "ProfileDropDown", panel, "UIDropDownMenuTemplate")
-    panel.profile_dropdown:SetPoint("TOPLEFT", 10, -70)
+    panel.profile_dropdown:SetPoint("TOPLEFT", 0, -112)
 
     local function GetCurrentProfile()
         return addon_data.db and addon_data.db:GetCurrentProfile() or "Default"
@@ -489,13 +589,14 @@ addon_data.config.CreateProfilesPanel = function(parent)
             panel.new_profile_editbox:SetMaxLetters(20)
         end
     )
-    panel.new_profile_editbox:SetPoint("TOPLEFT", 205, -75)
+    panel.new_profile_editbox:SetPoint("TOPLEFT", 220, -118)
 
     -- Create button
     panel.create_btn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.create_btn:SetSize(90, 22)
     panel.create_btn:SetPoint("LEFT", panel.new_profile_editbox, "RIGHT", 10, 0)
     panel.create_btn:SetText(L["Create"])
+    addon_data.config.StyleButton(panel.create_btn)
     panel.create_btn:SetScript("OnClick", function()
         local name = panel.new_profile_editbox:GetText()
         if not name or name == "" then return end
@@ -508,7 +609,7 @@ addon_data.config.CreateProfilesPanel = function(parent)
 
     -- Copy From (dropdown)
     panel.copy_from_dropdown = CreateFrame("Frame", addon_name .. "CopyFromDropDown", panel, "UIDropDownMenuTemplate")
-    panel.copy_from_dropdown:SetPoint("TOPLEFT", 10, -110)
+    panel.copy_from_dropdown:SetPoint("TOPLEFT", 0, -156)
     UIDropDownMenu_SetWidth(panel.copy_from_dropdown, 140)
     UIDropDownMenu_SetText(panel.copy_from_dropdown, L["Copy from..."])
 
@@ -581,6 +682,7 @@ addon_data.config.CreateProfilesPanel = function(parent)
     panel.reset_btn:SetSize(150, 22)
     panel.reset_btn:SetPoint("LEFT", panel.copy_from_dropdown, "RIGHT", 10, 0)
     panel.reset_btn:SetText(L["Reset Active Profile"])
+    addon_data.config.StyleButton(panel.reset_btn)
     panel.reset_btn:SetScript("OnClick", function()
         StaticPopup_Show("WST_CONFIRM_RESET_PROFILE", addon_data.db:GetCurrentProfile(), nil, addon_data.db:GetCurrentProfile())
 
@@ -589,8 +691,9 @@ addon_data.config.CreateProfilesPanel = function(parent)
 
     panel.delete_btn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     panel.delete_btn:SetSize(150, 22)
-    panel.delete_btn:SetPoint("TOPLEFT", 30, -150)
+    panel.delete_btn:SetPoint("TOPLEFT", 30, -194)
     panel.delete_btn:SetText(L["Delete Active Profile"])
+    addon_data.config.StyleButton(panel.delete_btn, true)
     panel.delete_btn:SetScript("OnClick", function()
         local current = addon_data.db:GetCurrentProfile()
         if current == "Default" then return end
