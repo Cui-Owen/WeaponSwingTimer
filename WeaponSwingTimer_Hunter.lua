@@ -73,6 +73,7 @@ addon_data.hunter.default_settings = {
     auto_cast_r = 0.8, auto_cast_g = 0.0, auto_cast_b = 0.0, auto_cast_a = 1.0,
     range_r = 0.85, range_g = 0.1, range_b = 0.1, range_a = 1.0,
     latency_r = 1.0, latency_g = 0.82, latency_b = 0.0, latency_a = 0.5,
+    latency_buffer_ms = 30,
     clip_r = 1.0, clip_g = 0.0, clip_b = 0.0, clip_a = 0.7
 }
 --- Initializing variables for calculations and function calls
@@ -447,6 +448,7 @@ addon_data.hunter.UpdateVisualsOnUpdate = function()
             frame:SetAlpha(settings.ooc_alpha)
         end
         if out_of_range then
+            frame.shot_bar:Show()
             frame.shot_bar:SetVertexColor(settings.range_r, settings.range_g, settings.range_b, settings.range_a)
             frame.shot_bar:SetWidth(settings.width)
             frame.multishot_clip_bar:Hide()
@@ -458,6 +460,7 @@ addon_data.hunter.UpdateVisualsOnUpdate = function()
             frame.auto_shot_cast_bar:Show()
         end
         if not settings.one_bar then
+            frame.shot_bar:Show()
             if addon_data.hunter.auto_shot_ready then
                 frame.shot_bar:SetVertexColor(settings.auto_cast_r, settings.auto_cast_g, settings.auto_cast_b, settings.auto_cast_a)
                 new_width = settings.width * (auto_cast_time - shot_timer) / auto_cast_time
@@ -485,15 +488,26 @@ addon_data.hunter.UpdateVisualsOnUpdate = function()
 			else
 				frame.shot_bar:SetVertexColor(settings.cooldown_r, settings.cooldown_g, settings.cooldown_b, settings.cooldown_a)
 			end
-            local timer_width = settings.width * ((addon_data.hunter.range_speed - addon_data.hunter.shot_timer) / addon_data.hunter.range_speed)
+            local latency_guard_seconds = latency_seconds + (math.max(settings.latency_buffer_ms or 0, 0) / 1000)
             local fixed_auto_shot_cast_width = settings.width * (addon_data.hunter.auto_cast_time / addon_data.hunter.range_speed)
             local latency_width = math.min(
-                settings.width * (latency_seconds / range_speed),
+                settings.width * (latency_guard_seconds / range_speed),
                 math.max(settings.width - fixed_auto_shot_cast_width, 0)
             )
+            local shot_window_seconds = math.min(auto_cast_time + latency_guard_seconds, range_speed)
+            local shot_window_width = fixed_auto_shot_cast_width + latency_width
+            local ready_width = math.max(settings.width - shot_window_width, 0)
+            local cooldown_duration = math.max(range_speed - shot_window_seconds, 0.001)
+            local cooldown_progress = math.min(math.max((range_speed - shot_timer) / cooldown_duration, 0), 1)
+            local timer_width = ready_width * cooldown_progress
             local auto_shot_cast_width
-            if addon_data.hunter.auto_shot_ready then
-                auto_shot_cast_width = settings.width * (addon_data.hunter.shot_timer / addon_data.hunter.range_speed)
+            if shot_timer <= shot_window_seconds and addon_data.hunter.shooting then
+                local shot_window_progress = math.min(math.max((shot_window_seconds - shot_timer) / math.max(shot_window_seconds, 0.001), 0), 1)
+                timer_width = math.min(
+                    math.max(ready_width + (shot_window_width * shot_window_progress), 0),
+                    settings.width
+                )
+                auto_shot_cast_width = math.max((settings.width - latency_width) - timer_width, 0)
             else
                 auto_shot_cast_width = fixed_auto_shot_cast_width
             end
@@ -501,17 +515,25 @@ addon_data.hunter.UpdateVisualsOnUpdate = function()
                 frame.multishot_clip_bar:Show()
                 local multishot_clip_width = math.min(settings.width * (mult_cast_time / range_speed ), settings.width)
                 frame.multishot_clip_bar:SetWidth(5)
-                local multi_offset = fixed_auto_shot_cast_width + multishot_clip_width
+                local multi_offset = math.min(shot_window_width + multishot_clip_width, settings.width)
                 frame.multishot_clip_bar:SetPoint('BOTTOMRIGHT', -multi_offset, 0)
             end
             if latency_width > 0 then
                 frame.latency_bar:SetWidth(latency_width)
-                frame.latency_bar:SetPoint('BOTTOMRIGHT', -fixed_auto_shot_cast_width, 0)
+                frame.latency_bar:ClearAllPoints()
+                frame.latency_bar:SetPoint('BOTTOMRIGHT', 0, 0)
                 frame.latency_bar:Show()
             else
                 frame.latency_bar:Hide()
             end
-            frame.shot_bar:SetWidth(math.min(timer_width, settings.width))
+            if timer_width > 0 then
+                frame.shot_bar:Show()
+                frame.shot_bar:SetWidth(math.min(timer_width, settings.width))
+            else
+                frame.shot_bar:Hide()
+            end
+            frame.auto_shot_cast_bar:ClearAllPoints()
+            frame.auto_shot_cast_bar:SetPoint('BOTTOMRIGHT', -latency_width, 0)
             frame.auto_shot_cast_bar:SetWidth(math.max(auto_shot_cast_width, 0.001))
         end
 		frame:SetSize(settings.width, settings.height)
@@ -634,7 +656,7 @@ addon_data.hunter.InitializeVisuals = function()
     frame.multishot_clip_bar = frame:CreateTexture(nil,"OVERLAY")
     -- Create the auto shot cast bar indicator
     frame.auto_shot_cast_bar = frame:CreateTexture(nil,"OVERLAY")
-    -- Create the latency indicator that sits to the left of the fixed auto shot window in one-bar mode
+    -- Create the latency indicator that sits to the right of the fixed auto shot window in one-bar mode
     frame.latency_bar = frame:CreateTexture(nil,"BACKGROUND")
     -- Show it off
     addon_data.hunter.UpdateVisualsOnSettingsChange()
@@ -670,6 +692,8 @@ addon_data.hunter.UpdateConfigPanelValues = function()
     panel.x_offset_editbox:SetCursorPosition(0)
     panel.y_offset_editbox:SetText(tostring(settings.y_offset))
     panel.y_offset_editbox:SetCursorPosition(0)
+    panel.latency_buffer_editbox:SetText(tostring(settings.latency_buffer_ms))
+    panel.latency_buffer_editbox:SetCursorPosition(0)
     panel.cooldown_color_picker.foreground:SetColorTexture(
         settings.cooldown_r, settings.cooldown_g, settings.cooldown_b, settings.cooldown_a)
     panel.autoshot_cast_color_picker.foreground:SetColorTexture(
@@ -757,6 +781,14 @@ end
 addon_data.hunter.YOffsetEditBoxOnEnter = function(self)
     character_hunter_settings.y_offset = tonumber(self:GetText())
     addon_data.hunter.UpdateVisualsOnSettingsChange()
+end
+
+addon_data.hunter.LatencyBufferEditBoxOnEnter = function(self)
+    local buffer_ms = tonumber(self:GetText())
+    if buffer_ms then
+        character_hunter_settings.latency_buffer_ms = math.max(buffer_ms, 0)
+        addon_data.hunter.UpdateVisualsOnSettingsChange()
+    end
 end
 
 addon_data.hunter.CooldownColorPickerOnClick = function()
@@ -963,6 +995,16 @@ addon_data.hunter.CreateConfigPanel = function(parent_panel)
         L["Network Latency Color"],
         addon_data.hunter.LatencyColorPickerOnClick)
     panel.latency_color_picker:SetPoint('TOPLEFT', 182, -244)
+
+    -- Latency safety buffer EditBox
+    panel.latency_buffer_editbox = addon_data.config.EditBoxFactory(
+        "HunterLatencyBufferEditBox",
+        panel,
+        L["Safety Buffer (ms)"],
+        80,
+        25,
+        addon_data.hunter.LatencyBufferEditBoxOnEnter)
+    panel.latency_buffer_editbox:SetPoint("TOPLEFT", 270, -292)
     
     -- In Combat Alpha Slider
     panel.in_combat_alpha_slider = addon_data.config.SliderFactory(
